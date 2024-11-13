@@ -1,9 +1,9 @@
 const express = require("express");
 const { apiRouter } = require("./routes");
-const { connectDB } = require("./config/db");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const port = 3000;
+const { connectDB } = require("./config/db");
+const port = 4000;
 
 const app = express();
 app.use(express.json());
