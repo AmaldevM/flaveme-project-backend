@@ -6,9 +6,9 @@ const { cloudinaryInstance } = require("../config/cloudinary");
 //UserSignup
 const userSignup = async (req, res) => {
   try {
-    const { name, email, phone, password } = req.body;
+    const { name, email, password } = req.body;
     // validation
-    if (!name || !email || !phone || !password) {
+    if (!name || !email || !password) {
       return res
         .status(400)
         .json({ success: false, message: "All fields required" });
@@ -39,7 +39,6 @@ const userSignup = async (req, res) => {
     const newUser = new User({
       name,
       email,
-      phone,
       password: hashedPassword,
     });
     // check req.file.path have image url
@@ -150,18 +149,23 @@ const userLogout = async (req, res) => {
 // UserProfile
 const userProfile = async (req, res) => {
   try {
-    const { user } = req;
-    console.log("User Data: ", user);
-
-    const userData = await User.findOne({ _id: user.id });
-    const { image, name, email, phone, _id } = userData;
+    // Get the user ID from the route parameter
+    const { id } = req.params;
+    console.log("User ID from request: ", id);
+    // Fetch the user data from the database by ID
+    const userData = await User.findById(id); 
+    if (!userData) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // Destructure the necessary fields
+    const { name, email, _id, profilePic } = userData;
+    // Return the profile data
     res.json({
       success: true,
-      message: "User profile",
-      profilePic,
+      message: "User profile fetched successfully",
+      profilePic,  
       name,
       email,
-      phone,
       _id,
     });
   } catch (error) {
@@ -171,6 +175,7 @@ const userProfile = async (req, res) => {
       .json({ message: error.message || "Internal server error" });
   }
 };
+
 
 //checkUser
 const checkUser = async (req, res, next) => {
@@ -250,11 +255,11 @@ const getAllUsers = async (req, res, next) => {
       .json({ message: error.messsage || "Internal server Error" });
   }
 };
-//Userdelete
 const deleteUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
 
+    // Find the user to delete
     const userToDelete = await User.findById(userId);
     if (!userToDelete) {
       return res
@@ -262,28 +267,37 @@ const deleteUser = async (req, res, next) => {
         .json({ success: false, message: "User not found" });
     }
 
-    // Check if the user being deleted is an admin
-    if (userToDelete.role.includes("admin")) {
+    // Check if the user being deleted has the role 'admin'
+    if (userToDelete.role === "admin") {
       return res
         .status(403)
         .json({ success: false, message: "Admins cannot delete other admins" });
     }
 
+    // Proceed to delete the user
     const deletedUser = await User.findByIdAndDelete(userId);
 
     if (!deletedUser) {
       return res
         .status(404)
-        .json({ success: false, message: "user not found" });
+        .json({ success: false, message: "User not found" });
     }
-    res.status(204).send();
+
+    // Send a success response
+    res
+      .status(200)
+      .json({ success: true, message: "User deleted successfully" });
   } catch (error) {
-    console.log(error);
+    console.error("Error deleting user:", error);
     res
       .status(error.statusCode || 500)
-      .json({ message: error.messsage || "Internal server Error" });
+      .json({
+        success: false,
+        message: error.message || "Internal server error",
+      });
   }
 };
+
 //reset password
 
 module.exports = {

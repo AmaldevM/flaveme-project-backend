@@ -15,6 +15,7 @@ const userAuth = async (req, res, next) => {
     // Verify token using jwt verify
     const decoded = jwt.verify(token, process.env.USER_JWT_SECRET_KEY);
 
+
     // Check if the token was successfully decoded
     if (!decoded) {
       return res.status(401).json({
