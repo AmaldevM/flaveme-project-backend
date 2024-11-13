@@ -23,7 +23,7 @@ const sellerSchema = new mongoose.Schema(
     address: { type: String },
   },
   { timestamps: true }
-); // Adds createdAt and updatedAt fields automatically
+); 
 
 const Seller = mongoose.model("Seller", sellerSchema);
 module.exports = { Seller };

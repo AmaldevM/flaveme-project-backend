@@ -21,6 +21,7 @@ app.use(
 // mongodb connection
 connectDB();
 
+
 app.use("/api", apiRouter);
 
 app.listen(port, () => {
