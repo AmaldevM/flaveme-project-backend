@@ -25,5 +25,5 @@ connectDB();
 app.use("/api", apiRouter);
 
 app.listen(port, () => {
-  console.log(`server running port: ${port}`);
+  console.log(`Server Started on http://localhost:${port}`);
 });

@@ -5,6 +5,7 @@ const {
   logoutSeller,
   getSellersList,
 } = require("../../controllers/sellerControllers");
+const { adminAuth } = require("../../middlewares/adminAuth");
 
 const router = express.Router();
 
@@ -18,6 +19,6 @@ router.post("/login", loginSeller);
 router.get("/logout", logoutSeller);
 
 // Get all sellers (Consider adding authentication middleware)
-router.get("/sellers", getSellersList);
+router.get("/sellers", adminAuth, getSellersList);
 
 module.exports = { sellerRouter: router };

@@ -15,5 +15,6 @@ router.get('/:orderId', userAuth, getOrderById);
 // Cancel order
 router.patch('/cancel/:orderId', userAuth,cancelOrder );
 // Update order
-router.put('/order/:id/status',adminAuth,  updateMenuItem)
+router.put('/order/:id/status',adminAuth,  updateMenuItem);
+
 module.exports = { orderRouter : router }

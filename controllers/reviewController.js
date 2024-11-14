@@ -60,7 +60,6 @@ const getreviews = async (req, res) => {
     if (menuItemId) {
       filter.menuItem = menuItemId;
     }
-
     const review = await Review.find(filter);
     res.status(200).json(review);
   } catch (error) {
