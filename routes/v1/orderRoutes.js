@@ -1,8 +1,8 @@
 const express = require('express')
 const {  createOrder, getOrderById, myOrders ,cancelOrder} = require('../../controllers/orderController')
 const { userAuth } = require('../../middlewares/userAuth')
-const { adminAuth } = require('../../middlewares/adminAuth')
-const { updateMenuItem } = require('../../controllers/menuController')
+const { sellerAuth } = require('../../middlewares/sellerAuth')
+const {  updateOrderStatus } = require('../../controllers/menuController')
 
 const router = express.Router()
 
@@ -14,7 +14,8 @@ router.get('/my-orders', userAuth, myOrders );
 router.get('/:orderId', userAuth, getOrderById);
 // Cancel order
 router.patch('/cancel/:orderId', userAuth,cancelOrder );
-// Update order
-router.put('/order/:id/status',adminAuth,  updateMenuItem);
+
+// Update order status(e.g., "Pending," "Preparing," "Dispatched," or "Delivered)
+router.put('/order/:id/status', sellerAuth,  updateOrderStatus);
 
 module.exports = { orderRouter : router }

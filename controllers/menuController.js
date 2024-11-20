@@ -1,100 +1,308 @@
 const { cloudinaryInstance } = require("../config/cloudinary");
 const { Menu } = require("../models/menuModel");
 
-// menu list for restaurant
-const getMenuItems = async (req, res) => {
-  try {
-    const menuItems = await Menu.find({});
-    return res.status(200).json(menuItems);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-// get menu item by id
-const getMenuItemById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const item = await Menu.findOne({ _id: id });
-    if (!item) {
-      return res.status(404).json({ message: "Item not found" });
-    }
-    res.status(200).json(item);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching item", error });
-  }
-};
-
-// create menu items
+// Create a menu
 const createMenuItem = async (req, res) => {
   try {
-    const seller = req.seller;
-    console.log(seller, "===seller");
-    const { name, ...rest } = req.body;
-    if (!name || Object.keys(rest).length === 0) {
-      return res.status(400).json({ message: "All fields are required" });
+    const { restaurantId, name, ...rest } = req.body;
+
+    // Validate required fields
+    if (!restaurantId || !name) {
+      return res.status(400).json({
+        success: false,
+        message: "Restaurant ID and name are required",
+      });
     }
 
-    const existMenuItem = await Menu.findOne({ name });
+    // Check for duplicate menu item
+    const existMenuItem = await Menu.findOne({ restaurantId, name });
     if (existMenuItem) {
-      return res.status(409).json({ message: "Item already exists" });
+      return res.status(409).json({
+        success: false,
+        message: "Menu item already exists",
+      });
     }
 
-    let uploadResult;
+    // Upload image to Cloudinary if provided
     if (req.file) {
-      console.log("Uploading file to Cloudinary...");
-      uploadResult = await cloudinaryInstance.uploader.upload(req.file.path);
-      console.log("Upload result:", uploadResult);
-    } else {
-      console.log("No file to upload.");
+      try {
+        const uploadResult = await cloudinaryInstance.uploader.upload(
+          req.file.path
+        );
+        rest.image = uploadResult.secure_url;
+      } catch (error) {
+        return res.status(500).json({
+          success: false,
+          message: "Image upload failed",
+          error: error.message,
+        });
+      }
     }
 
-    const newItem = new Menu({
-      name,
-      ...rest,
-      image: uploadResult?.secure_url || "",
+    // Create and save the menu item
+    const newItem = new Menu({ restaurantId, name, ...rest });
+    const savedMenuItem = await newItem.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Menu item created successfully",
+      data: savedMenuItem,
     });
-    const saveMenuItem = await newItem.save();
-    res.status(201).json(saveMenuItem);
   } catch (error) {
-    res.status(500).json({ message: "Error creating item", error });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
 
-// update menu item
-const updateMenuItem = async (req, res) => {
+// Get the menu for a restaurant
+const getMenubyRestaurantid = async (req, res) => {
   try {
-    const updatedMenuItem = await Menu.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
+    const { restaurantId } = req.params;
+    const menus = await Menu.find({ restaurantId });
+
+    if (!menus.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No menus found for this restaurant",
+      });
+    }
+
+    res.status(200).json({ success: true, menus });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Get menu by category
+const getMenusByCategory = async (req, res) => {
+  try {
+    const { restaurantId, category } = req.params;
+    const menus = await Menu.find({ restaurantId, category });
+
+    if (!menus.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No menu items found in this category",
+      });
+    }
+
+    res.status(200).json({ success: true, menus });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Search menu by name
+const searchMenuByName = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const { name } = req.query;
+
+    const menus = await Menu.find({
+      restaurantId,
+      name: { $regex: name, $options: "i" },
+    });
+
+    if (!menus.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No menu items match the search query",
+      });
+    }
+
+    res.status(200).json({ success: true, menus });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Filter menu by price
+const filterMenusByPrice = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const minPrice = Number(req.query.minPrice) || 0;
+    const maxPrice = Number(req.query.maxPrice) || Infinity;
+
+    const menus = await Menu.find({
+      restaurantId,
+      price: { $gte: minPrice, $lte: maxPrice },
+    });
+
+    if (!menus.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No menu items found in the given price range",
+      });
+    }
+
+    res.status(200).json({ success: true, menus });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Update a menu item
+const updateMenu = async (req, res) => {
+  try {
+    const { menuId } = req.params; 
+    const updates = req.body; 
+
+    // Validate that the updates object is not empty
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No updates provided",
+      });
+    }
+
+    // Find the menu item and update it
+    const updatedMenu = await Menu.findByIdAndUpdate(menuId, updates, {
+      new: true, 
+      runValidators: true, 
+    });
+
+    // If the menu item is not found, return an error
+    if (!updatedMenu) {
+      return res.status(404).json({
+        success: false,
+        message: "Menu item not found",
+      });
+    }
+
+    // Success response
+    res.status(200).json({
+      success: true,
+      message: "Menu item updated successfully",
+      menu: updatedMenu, // Include updated menu item in the response
+    });
+  } catch (error) {
+    // Catch and handle server errors
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+
+// Delete a menu item
+const deleteMenu = async (req, res) => {
+  try {
+    const { menuId } = req.params;
+
+    const deletedMenu = await Menu.findByIdAndDelete(menuId);
+
+    if (!deletedMenu) {
+      return res.status(404).json({
+        success: false,
+        message: "Menu item not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Menu item deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Order controller status
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params; // Extract order ID from params
+    const { status } = req.body; // Extract new status from body
+
+    // Validate that a status was provided
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: "Order status is required",
+      });
+    }
+
+    // Validate that the status is one of the allowed values
+    const validStatuses = [
+      "Pending",
+      "Preparing",
+      "Dispatched",
+      "Delivered",
+      "Cancelled",
+    ];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed statuses: ${validStatuses.join(
+          ", "
+        )}`,
+      });
+    }
+
+    // Find the order and update the status
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true } // Return the updated document
     );
-    if (!updatedMenuItem) {
-      return res.status(404).json({ message: "Item not found" });
+
+    // If order not found
+    if (!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
-    res.status(200).json(updatedMenuItem);
+
+    // Success response
+    res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+      order: updatedOrder,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error updating item", error });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
 
-// delete menu item
-const deleteMenuItem = async (req, res) => {
-  try {
-    const deletedItem = await Menu.findByIdAndDelete(req.params.id);
-    if (!deletedItem) {
-      return res.status(404).json({ message: "Item not found" });
-    }
-    res.status(200).json({ message: "Item deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting item", error });
-  }
-};
+module.exports = { updateOrderStatus };
+
 
 module.exports = {
-  getMenuItems,
   createMenuItem,
-  getMenuItemById,
-  updateMenuItem,
-  deleteMenuItem,
+  getMenubyRestaurantid,
+  getMenusByCategory,
+  searchMenuByName,
+  filterMenusByPrice,
+  updateMenu,
+  deleteMenu,
+  updateOrderStatus
 };

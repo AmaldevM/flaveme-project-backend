@@ -5,16 +5,15 @@ const userAuth = async (req, res, next) => {
   try {
     // Destructure token from cookies
     const { token } = req.cookies;
+    // Check have any token
     if (!token) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized access: No token provided",
       });
     }
-
     // Verify token using jwt verify
     const decoded = jwt.verify(token, process.env.USER_JWT_SECRET_KEY);
-
 
     // Check if the token was successfully decoded
     if (!decoded) {

@@ -12,6 +12,7 @@ const addressSchema = new mongoose.Schema({
   email: { type: String, required: true },
   street: { type: String, required: true },
   city: { type: String, required: true },
+  Landmark: { type: String, required: true },
   pincode: { type: String, required: true, match: /^[0-9]{5,6}$/ },
 });
 

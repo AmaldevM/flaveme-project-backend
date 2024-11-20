@@ -48,7 +48,7 @@ const createReview = async (req, res) => {
     });
   }
 };
-
+// get review
 const getreviews = async (req, res) => {
   try {
     // Destructure values from req.query
@@ -69,7 +69,46 @@ const getreviews = async (req, res) => {
   }
 };
 
+// delete review
+const deleteReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const userId = req.user.id; 
+
+    // Find the review by ID
+    const review = await Review.findById(reviewId);
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    // Check if the user is the owner of the review or an admin
+    if (review.user.toString() !== userId && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to delete this review",
+      });
+    }
+
+    // Delete the review
+    await review.deleteOne();
+    res.status(200).json({
+      success: true,
+      message: "Review deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while deleting the review",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createReview,
   getreviews,
+  deleteReview
 };

@@ -7,26 +7,22 @@ const createAddress = async (req, res) => {
     const { name, email, city, street, phone, pincode } = req.body;
     console.log(name, email);
     // validation
-    if (!name || !email || !street || !city || !phone || !pincode) {
+    if (!name || !email || !street || !city || !phone || !pincode || !Landmark) {
       return res
         .status(400)
         .json({ success: false, message: "All fields required" });
     }
-
     // Get user info from auth middleware
     const userInfo = req.user;
-
     // Find the user and check if they already have an address
     const user = await User.findOne({ email: userInfo.email }).populate(
       "address"
     );
-
     if (!user) {
       return res
         .status(401)
         .json({ success: false, message: "Unauthorized user" });
     }
-
     if (user.address) {
       return res.status(400).json({
         success: false,
@@ -42,6 +38,7 @@ const createAddress = async (req, res) => {
       street,
       phone,
       pincode,
+      Landmark,
     });
 
     await newAddress.save();
@@ -63,17 +60,11 @@ const updateAddress = async (req, res) => {
     const { name, email, city, street, phone, pincode } = req.body;
     const userInfo = req.user;
     const user = await User.findOne({ email: userInfo.email }).populate("address");
-
-    if (!user) {
-      return res.status(401).json({ success: false, message: "Unauthorized user" });
-    }
-
-    if (!user.address) {
-      return res.status(404).json({ success: false, message: "Address not found" });
-    }
-
+    if (!user) 
+      { return res.status(401).json({ success: false, message: "Unauthorized user" });}
+    if (!user.address)
+       { return res.status(404).json({ success: false, message: "Address not found" });}
     const address = await Address.findById(user.address._id);
-
     if (name) address.name = name;
     if (email) address.email = email;
     if (city) address.city = city;
@@ -93,7 +84,28 @@ const updateAddress = async (req, res) => {
   }
 };
 
+// get address
+const getAddress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const addresses = await Address.find({ user: userId });
+    res.status(200).json(addresses);
+  } catch (error) {}
+};
+// delete address
+const deleteAddress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    await Address.findByIdAndDelete(userId);
+    res.status(200).json({ message: "Address deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createAddress,
   updateAddress,
+  getAddress,
+  deleteAddress
 };

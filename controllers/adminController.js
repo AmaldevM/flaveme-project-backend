@@ -93,7 +93,7 @@ const checkadmin = async (req, res,next) => {
       res.status(401).json({succesd:false,message:"admin not autherized"})
     }
 
-    res.json({success: true, messege: "user autherized",});
+    res.json({success: true, messege: "admin autherized",});
 
   } catch (error){
     console.log(error);
@@ -182,5 +182,6 @@ module.exports = {
   updateAdmin,
   deleteUser,
   getUserList,
-  checkUser
+  checkUser,
+  checkadmin
 };

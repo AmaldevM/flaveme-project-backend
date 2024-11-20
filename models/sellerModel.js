@@ -2,17 +2,14 @@ const mongoose = require("mongoose");
 
 const sellerSchema = new mongoose.Schema(
   {
-    email: {
-      type: String,
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true, select: false },
+    restaurant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
       required: true,
-      unique: true,
-      match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        "Please fill a valid email address",
-      ],
     },
-    password: { type: String, required: true, select: false }, // Password will not be returned in queries
-    storeName: { type: String, required: true },
     phone: {
       type: String,
       match: [

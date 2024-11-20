@@ -10,11 +10,15 @@ const cartSchema = new mongoose.Schema(
           ref: "MenuItem",
           required: true,
         },
-        quantity: { type: Number, required: true, default: 1 },
+        quantity: { type: Number, required: true },
+        price: { type: Number, required: true },
         image: { type: String },
+        ItemName: { type: String, required: true },
       },
     ],
     totalPrice: { type: Number, required: true, default: 0 },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

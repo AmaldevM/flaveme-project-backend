@@ -7,7 +7,8 @@ const {
   updateAdmin, 
   deleteUser, 
   getUserList, 
-  checkUser 
+  checkUser, 
+  checkadmin
 } = require("../../controllers/adminController");
 const { adminAuth } = require("../../middlewares/adminAuth");
 
@@ -15,26 +16,21 @@ const router = express.Router();
 
 // Admin signup
 router.post("/signup", adminSignup);
-
 // Admin login
 router.post("/login", adminLogin);
-
 // Admin logout
 router.post("/logout", adminLogout);
-
-// Admin profile (protected route)
+// Admin profile 
 router.get("/profile/:id", adminAuth, adminProfile);
-
-// Update admin (protected route)
+// Update admin 
 router.put("/update/:userId", adminAuth, updateAdmin);
-
-// Delete user (protected route)
+// Delete user 
 router.delete("/delete/:userId", adminAuth, deleteUser);
-
-// Get user list (protected route)
+// Get user list 
 router.get("/userlist", adminAuth, getUserList);
-
-// Check user (protected route)
+// Check user 
 router.get("/checkUser", adminAuth, checkUser);
+// check admin 
+router.get("/check-admin", adminAuth, checkadmin);
 
 module.exports = { adminRouter: router };

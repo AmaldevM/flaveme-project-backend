@@ -5,11 +5,14 @@ const adminAuth = async (req, res, next) => {
   try {
     // destructure token from cookies
     const { token } = req.cookies;
+
+    // Check if have the cookie
     if (!token) {
       return res
         .status(401)
         .json({ succuss: false, message: "unauthoraized admin" });
     }
+
     // verify token using jwt verify
     const verifiedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
     if (!verifiedToken) {
@@ -26,8 +29,8 @@ const adminAuth = async (req, res, next) => {
         .json({ success: false, message: "user not autherized" });
     }
 
+    // If have token send the token as a object
     req.admin = verifiedToken;
-    
     next();
   } catch (error) {
     res

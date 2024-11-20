@@ -2,18 +2,21 @@ const mongoose = require("mongoose");
 
 const menuSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, unique: true },
-    description: { type: String, required: true },
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
+      required: true,
+    },
+    name: { type: String, required: true },
+    description: { type: String, default: "" },
     price: { type: Number, required: true },
+    category: { type: String, default: "General" },
     image: { type: String, default: "" },
-    category: { type: mongoose.Schema.Types.ObjectId,ref: "Category",},
     availability: { type: Boolean, default: true },
   },
-
   { timestamps: true }
-); 
+);
 
 const Menu = mongoose.model("Menu", menuSchema);
 
 module.exports = { Menu };
-
