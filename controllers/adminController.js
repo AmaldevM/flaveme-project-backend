@@ -5,7 +5,7 @@ const { generateToken } = require("../utils/token");
 // AdminSignup
 const adminSignup = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role, profilePic } = req.body;
+    const { name, email, password, phone, profilePic } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: "All fields are required" });
@@ -19,10 +19,10 @@ const adminSignup = async (req, res, next) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const newUser = new Admin({ name, email, password: hashedPassword, phone, profilePic, role });
+    const newUser = new Admin({ name, email, password: hashedPassword, phone, profilePic});
     await newUser.save();
 
-    const token = generateToken(newUser._id, "admin");
+    const token = generateToken({_id: newUser._id, role: "admin",})
     res.cookie("token", token, { httpOnly: true, sameSite: "strict" });
 
     res.json({ success: true, message: "Admin signed up successfully" });
@@ -41,6 +41,7 @@ const adminLogin = async (req, res, next) => {
     }
 
     const adminExist = await Admin.findOne({ email });
+  
     if (!adminExist) {
       return res.status(404).json({ success: false, message: "Admin does not exist" });
     }
@@ -50,9 +51,10 @@ const adminLogin = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "Unauthorized password" });
     }
 
-    const token = generateToken(adminExist._id, "admin");
+    const token = generateToken({_id: adminExist._id,role: adminExist.role})
+    console.log("object", token)
     res.cookie("token", token, { httpOnly: true, sameSite: "strict" });
-
+    
     res.status(200).json({ success: true, message: "Admin login successful" });
   } catch (error) {
     console.error(error);

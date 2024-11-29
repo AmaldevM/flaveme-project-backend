@@ -20,17 +20,17 @@ router.post("/signup", adminSignup);
 router.post("/login", adminLogin);
 // Admin logout
 router.post("/logout", adminLogout);
-// Admin profile 
-router.get("/profile/:id", adminAuth, adminProfile);
-// Update admin 
+// Admin profile (fetch logged-in admin profile)
+router.get("/profile", adminAuth, adminProfile); // Use authenticated admin
+// Update admin
 router.put("/update/:userId", adminAuth, updateAdmin);
-// Delete user 
+// Delete user
 router.delete("/delete/:userId", adminAuth, deleteUser);
-// Get user list 
+// Get user list
 router.get("/userlist", adminAuth, getUserList);
-// Check user 
+// Check user (check if admin is authenticated)
 router.get("/checkUser", adminAuth, checkUser);
-// check admin 
+// Check admin (check if the user is an admin)
 router.get("/check-admin", adminAuth, checkadmin);
 
 module.exports = { adminRouter: router };

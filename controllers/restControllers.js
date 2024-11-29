@@ -7,51 +7,68 @@ const { handleImageUpload } = require("../utils/imageUpload");
 // Create restaurant
 const createRestaurant = async (req, res) => {
   try {
-    const user = req.user;
-    console.log(req.file)
-    let imageUrl;
+    const user = req.user; // Assumes middleware adds authenticated user data to req.user
+
+    // Check if the user is an admin
+    if (user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Only admins can create restaurants",
+      });
+    }
+
     const { name, description, address, phone, cuisineType } = req.body;
 
-    // Validation
+    // Validate required fields
     if (!name || !description || !phone || !address || !cuisineType) {
-      return res
-        .status(400)
-        .json({ success: false, message: "All fields are required" });
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
     }
 
+    // Check for existing restaurant
     const existRestaurant = await Restaurant.findOne({ name });
-
     if (existRestaurant) {
-      return res
-        .status(409)
-        .json({ success: false, message: "Restaurant already exists" });
+      return res.status(409).json({
+        success: false,
+        message: "Restaurant already exists",
+      });
     }
 
-      if (req.file) {
-    imageUrl = await handleImageUpload(req.file.path);
-      }
+    // Handle optional image upload
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = await handleImageUpload(req.file.path); // Assumes this function uploads the image
+    }
 
-        const restaurant = new Restaurant({ 
-          name, 
-          description, 
-          address,
-          phone, 
-          image:imageUrl && imageUrl , 
-          cuisineType, 
-          seller});
-       if (user.role === "seller") restaurant.seller = user.id;
-        const savedRestaurant = await restaurant.save();
-        restaurant : savedRestaurant,
-   res
-     .status(201)
-     .json({ success: true, message: "restaurant created successfully" });
+    // Create restaurant
+    const restaurant = new Restaurant({
+      name,
+      description,
+      address,
+      phone,
+      image: imageUrl,
+      cuisineType,
+    });
 
+    const savedRestaurant = await restaurant.save();
 
+    res.status(201).json({
+      success: true,
+      message: "Restaurant created successfully",
+      restaurant: savedRestaurant,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error creating restaurant", error });
+    res.status(500).json({
+      success: false,
+      message: "Error creating restaurant",
+      error: error.message,
+    });
   }
 };
+
 
 // Update restaurant
 const updateRestaurant = async (req, res, next) => {

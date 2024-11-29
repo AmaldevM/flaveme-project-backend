@@ -5,8 +5,8 @@ const restSchema = new mongoose.Schema({
   description: { type: String, required: true },
   address: { type: String, required: true },
   phone: { type: String, required: true },
-  location: { type: String, required: true },
-  cuisine: { type: String, required: true },
+  location: { type: String,},
+  cuisine: { type: String, },
   rating: { type: Number, min: 0, max: 5, default: 0 },
   openingHours: {
     open: { type: String },
