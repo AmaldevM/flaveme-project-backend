@@ -17,10 +17,10 @@ const createRestaurant = async (req, res) => {
       });
     }
 
-    const { name, description, address, phone, cuisineType } = req.body;
+    const { name, description, address, phone, cuisine, rating   } = req.body;
 
     // Validate required fields
-    if (!name || !description || !phone || !address || !cuisineType) {
+    if (!name || !description || !phone || !address || !cuisine || !rating) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -49,7 +49,8 @@ const createRestaurant = async (req, res) => {
       address,
       phone,
       image: imageUrl,
-      cuisineType,
+      cuisine,
+      rating: Number(rating), 
     });
 
     const savedRestaurant = await restaurant.save();
